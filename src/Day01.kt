@@ -18,8 +18,7 @@ fun main() {
         }
     }
 
-
-    fun findMeMyDigit2(
+    fun findMeMyDigit(
         inputString: String,
         direction: Direction) : Char {
         val digitIndex = when(direction) {
@@ -43,10 +42,9 @@ fun main() {
 
     fun part2(input: List<String>): Int {
         return input.sumOf { str ->
-            val first = findMeMyDigit2(str, Direction.First)
-            val last = findMeMyDigit2(str, Direction.Last)
+            val first = findMeMyDigit(str, Direction.First)
+            val last = findMeMyDigit(str, Direction.Last)
 
-            // result for this row
             "$first$last".toInt()
         }
     }
