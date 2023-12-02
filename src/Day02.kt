@@ -45,17 +45,28 @@ fun main() {
     }
 
     fun part2(input: List<String>): Int {
-        return 1
+        return input.sumOf { line ->
+            val game = gameForInput(line)
+            var minRed = 0
+            var minGreen = 0
+            var minBlue = 0
+            game.draws.forEach { draw ->
+                minRed = minRed.coerceAtLeast(draw.red)
+                minGreen = minGreen.coerceAtLeast(draw.green)
+                minBlue = minBlue.coerceAtLeast(draw.blue)
+            }
+            return@sumOf minRed * minGreen * minBlue
+        }
     }
 
     // test if implementation meets criteria from the description, like:
-    val testInput = readInput("Day02_test_part1")
+    val testInput = readInput("Day02_test")
     check(part1(testInput) == 8)
-    //val testInput2 = readInput("Day02_test_part2")
-    //check(part2(testInput2) == 281)
+    val testInput2 = readInput("Day02_test")
+    check(part2(testInput2) == 2286)
 
     // solution
     val input = readInput("Day02")
     part1(input).println()
-    //part2(input).println()
+    part2(input).println()
 }
