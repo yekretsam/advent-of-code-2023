@@ -117,7 +117,7 @@ fun main() {
 
         var index = 0
         while(index < currLine.length) {
-            if(currLine[index].isSymbol()) {
+            if(currLine[index] == '*') {
                 val numbers = arrayListOf<Int>()
 
                 numbers.apply {
