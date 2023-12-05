@@ -34,7 +34,7 @@ class Almanac() {
 
     private fun findInMappings(toFind: Long, mapping: List<Mapping>) : Long {
         mapping.forEach { currMapping ->
-            if(toFind in currMapping.source..currMapping.source+currMapping.range) {
+            if(toFind in currMapping.source..<currMapping.source+currMapping.range) {
                 return currMapping.destination + toFind - currMapping.source
             }
         }
