@@ -13,10 +13,10 @@ fun main() {
 
     fun solution(input: List<String>, evalStart : (String) -> Boolean): Long {
         val instructions = input[0].map { it == 'L' }
-        val nodeMappings = input.subList(2, input.size).map { line ->
+        val nodeMappings = input.subList(2, input.size).associate { line ->
             val entries = line.replace('=', ',').filter { it.isLetter() || it.isDigit() || it == ',' }.split(',')
             entries[0] to entries.subList(1, 3)
-        }.toMap()
+        }
 
         val allCurrNodes = nodeMappings.filter { evalStart(it.key) }.map { it.key }
         val allResults: ArrayList<Long> = arrayListOf()
