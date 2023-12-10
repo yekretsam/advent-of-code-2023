@@ -1,31 +1,27 @@
 import kotlin.time.measureTime
 
-var cnt: Long = 0L
-var input: List<String> = listOf()
-var explored: ArrayList<IntArray> = arrayListOf()
-
 fun main() {
-    fun getStartCoords(): IntArray {
+    fun getStartCoords(input: List<String>): Pair<Int, Int> {
         input.forEachIndexed { i, line ->
             line.forEachIndexed { j, char ->
                 if(char == 'S') {
-                    return intArrayOf(i, j)
+                    return Pair(i, j)
                 }
             }
         }
         throw IllegalStateException("S not found :(")
     }
 
-    fun isValidPath(start: IntArray, toCheck: IntArray, includeS: Boolean) : Boolean {
+    fun isValidPath(input: List<String>, start: Pair<Int, Int>, toCheck: Pair<Int, Int>, includeS: Boolean) : Boolean {
         val toCheckRelative = intArrayOf(
-            toCheck[0] - start[0],
-            toCheck[1] - start[1]
+            toCheck.first - start.first,
+            toCheck.second - start.second
         )
 
         // no diagonals
         if(toCheckRelative.any { it == 0 }){
-            val currChar = input[start[0]][start[1]]
-            val toCheckChar = input[toCheck[0]][toCheck[1]]
+            val currChar = input[start.first][start.second]
+            val toCheckChar = input[toCheck.first][toCheck.second]
             if(toCheckRelative[0] == -1) { // top
                 if(currChar == '|' || currChar == 'L' || currChar == 'J' || currChar == 'S') {
                     return toCheckChar == '|' || toCheckChar == '7' || toCheckChar == 'F' || (includeS && toCheckChar == 'S')
@@ -49,49 +45,42 @@ fun main() {
         }
     }
 
-    fun findStepsToS(currLocation: IntArray, currSteps: Int) : Int {
-        //println("$currSteps: ${currLocation.toList()}: ${input[currLocation[0]][currLocation[1]]}")
+    fun part1(input: List<String>) : Int {
+        val startLocation = getStartCoords(input)
 
-        if(input[currLocation[0]][currLocation[1]] == 'S') {
-            if(currSteps > 2) {
-                return currSteps
-            }
-        }
+        val explored: ArrayList<Pair<Int, Int>> = arrayListOf()
+        var currLocations = arrayListOf<Pair<Int, Int>>()
+        currLocations.add(Pair(startLocation.first, startLocation.second))
+        var steps = 0
 
-        if(currSteps > 10000) {
-            return -1
-        }
-
-        // check all directions
-        for(i in currLocation[0]-1..currLocation[0]+1) {
-            for(j in currLocation[1]-1..currLocation[1]+1) {
-                val checking = intArrayOf(i, j)
-                if(
-                    // bound checks
-                    i >= 0 && i < input.size &&
-                    j >= 0 && j < input[0].length &&
-                    // skip explored Locations
-                    !(explored.any { it.contentEquals(checking) })
-                ) {
-                    if(isValidPath(currLocation, intArrayOf(i, j), currSteps > 1)) {
-                        explored.add(intArrayOf(i, j))
-                        findStepsToS(intArrayOf(i, j), currSteps + 1).let {
-                            if (it != -1) {
-                                return it
+        while(true) {
+            val newLocations = arrayListOf<Pair<Int, Int>>()
+            steps++
+            currLocations.forEach { currLocation ->
+                for (i in currLocation.first - 1..currLocation.first + 1) {
+                    for (j in currLocation.second - 1..currLocation.second + 1) {
+                        val checking = Pair(i, j)
+                        if (steps > 2 && input[currLocation.first][currLocation.second] == 'S') {
+                            return steps
+                        }
+                        if (
+                            // bound checks
+                            i >= 0 && i < input.size &&
+                            j >= 0 && j < input[0].length &&
+                            // skip explored Locations
+                            !(explored.any { it.first == checking.first && it.second == checking.second })
+                        ) {
+                            if (isValidPath(input, currLocation, Pair(i, j), steps > 2)) {
+                                explored.add(checking)
+                                newLocations.add(Pair(i, j))
                             }
                         }
                     }
                 }
             }
+            if(newLocations.size == 0) return steps-1
+            currLocations = newLocations
         }
-        return -1
-    }
-
-    fun part1(): Int {
-        // find S
-        val currLocation = getStartCoords()
-
-        return findStepsToS(currLocation, 0) / 2
     }
 
     fun part2(): Int {
@@ -100,21 +89,19 @@ fun main() {
 
     measureTime {
         // test if implementation meets criteria from the description, like:
-        input = readInput("Day10_test")
-        part1().let {
+        val input = readInput("Day10_test")
+        part1(input).let {
             println(it)
             check(it == 4)
         }
-
-        input = readInput("Day10_test2")
-        explored = arrayListOf()
-        part1().let {
+        val input1 = readInput("Day10_test2")
+        part1(input1).let {
             println(it)
             check(it == 8)
         }
-        input = readInput("Day10")
-        explored = arrayListOf()
-        part1().println()
+
+        val input2 = readInput("Day10")
+        part1(input2).println()
 
         //val testInput2 = readInput("Day10_test")
         //check(part2(testInput2) == 1)
