@@ -40,12 +40,30 @@ fun main() {
         }
     }
 
-    fun Char.isPipe() : Boolean {
-        return this == 'S' || this == '║' || this == '═' || this == '╝' || this == '╗' || this == '╔' || this == '╚'
-    }
+    fun floodMap(newMap: Array<CharArray>) : Array<CharArray> {
+        var currLocationsToCheck: List<Pair<Int, Int>> = listOf(Pair(0,0))
+        while(currLocationsToCheck.isNotEmpty()) {
+            val newLocations: ArrayList<Pair<Int, Int>> = arrayListOf()
+            currLocationsToCheck.forEach { currLocationToCheck ->
+                for (i in currLocationToCheck.first - 1..currLocationToCheck.first + 1) {
+                    for (j in currLocationToCheck.second - 1..currLocationToCheck.second + 1) {
+                        if (
+                            // bound checks
+                            i >= 0 && i < newMap.size &&
+                            j >= 0 && j < newMap[0].size &&
+                            // skip explored Locations
+                            newMap[i][j] != 'X' && newMap[i][j] != 'O')
+                        {
+                            newMap[i][j] = 'O'
+                            newLocations.add(Pair(i,j))
+                        }
+                    }
+                }
+            }
+            currLocationsToCheck = newLocations
+        }
 
-    fun Char.isNotPipe() : Boolean {
-        return !this.isPipe()
+        return newMap
     }
 
     fun part1(input: List<String>) : Int {
@@ -56,15 +74,14 @@ fun main() {
         currLocations.add(Pair(startLocation.first, startLocation.second))
         var steps = 0
 
-        val newMap: Array<CharArray> = Array(input.size) {
-            CharArray(input[0].length)
+        var newMap: Array<CharArray> = Array(input.size * 3) {
+            CharArray(input[0].length * 3)
         }
 
-        var lastLocation: Pair<Int, Int>? = null
+        var lastLocation: Pair<Int, Int>? = startLocation
         while(true) {
             val newLocations = arrayListOf<Pair<Int, Int>>()
             steps++
-            //println("currLocations: ${currLocations.size} (${currLocations.toList()})")
             currLocations.forEach { currLocation ->
                 // update my map
                 for (i in currLocation.first - 1..currLocation.first + 1) {
@@ -82,62 +99,31 @@ fun main() {
                                 j - currLocation.second
                             )
                             if (isValidPath(input, currLocation, toCheckRelative, steps > 2)) {
-                                if(newLocations.size == 0) {
-                                    explored.add(checking)
-                                    newLocations.add(Pair(i, j))
-                                    if(lastLocation != null) {
-                                        val lastRelative = Pair(
-                                            lastLocation!!.first - currLocation.first,
-                                            lastLocation!!.second - currLocation.second
-                                        )
-                                        if(lastRelative.first == -1 && toCheckRelative.first == 1 ||
-                                            lastRelative.first == 1 && toCheckRelative.first == -1) {
-                                            newMap[currLocation.first][currLocation.second] = '║'
-                                        } else if(lastRelative.second == -1 && toCheckRelative.second == 1 ||
-                                            lastRelative.second == 1 && toCheckRelative.second == -1) {
-                                            newMap[currLocation.first][currLocation.second] = '═'
-                                        } else if(lastRelative.second == -1 && toCheckRelative.first == -1 ||
-                                            lastRelative.first == -1 && toCheckRelative.second == -1) {
-                                            newMap[currLocation.first][currLocation.second] = '╝'
-                                        } else if(lastRelative.second == -1 && toCheckRelative.first == 1 ||
-                                            lastRelative.first == 1 && toCheckRelative.second == -1) {
-                                            newMap[currLocation.first][currLocation.second] = '╗'
-                                        } else if(lastRelative.first == 1 && toCheckRelative.second == 1 ||
-                                            lastRelative.second == 1 && toCheckRelative.first == 1) {
-                                            newMap[currLocation.first][currLocation.second] = '╔'
-                                        } else if(lastRelative.first == -1 && toCheckRelative.second == 1 ||
-                                            lastRelative.second == 1 && toCheckRelative.first == -1) {
-                                            newMap[currLocation.first][currLocation.second] = '╚'
-                                        }
+                                val newMapX = currLocation.first * 3
+                                val newMapY = currLocation.second * 3
+                                newMap[newMapX][newMapY] = 'X'
+                                if(lastLocation != null) {
+                                    val lastRelative = Pair(
+                                        lastLocation!!.first - currLocation.first,
+                                        lastLocation!!.second - currLocation.second
+                                    )
+                                    if(lastRelative.first == -1 || toCheckRelative.first == -1) {
+                                        newMap[newMapX-1][newMapY] = 'X'
                                     }
-                                    newMap[i][j] = 'S'
-                                    /*
-                                    if(toCheckRelative.first == -1) { // top
-                                        if(currLocation.second-1 >= 0 && newMap[currLocation.first-1][currLocation.second-1].isNotPipe()) { // topLeft
-                                            newMap[currLocation.first-1][currLocation.second-1] = '2'
-                                        } else if(currLocation.second+1 < input[0].length && newMap[currLocation.first-1][currLocation.second+1].isNotPipe()) { // topRight
-                                            newMap[currLocation.first-1][currLocation.second+1] = '3'
-                                        }
-                                    } else if(toCheckRelative.first == 1) { // bottom
-                                        if(currLocation.second-1 >= 0 && newMap[currLocation.first+1][currLocation.second-1].isNotPipe()) { // bottomLeft
-                                            newMap[currLocation.first+1][currLocation.second-1] = '3'
-                                        } else if(currLocation.second+1 < input[0].length && newMap[currLocation.first+1][currLocation.second+1].isNotPipe()) { // bottomRight
-                                            newMap[currLocation.first+1][currLocation.second+1] = '2'
-                                        }
-                                    } else if(toCheckRelative.second == -1) { // left
-                                        if(currLocation.first-1 >= 0 && newMap[currLocation.first-1][currLocation.second-1].isNotPipe()) { // leftTop
-                                            newMap[currLocation.first-1][currLocation.second-1] = '3'
-                                        } else if(currLocation.first+1 < input.size && newMap[currLocation.first+1][currLocation.second-1].isNotPipe()) { // leftBottom
-                                            newMap[currLocation.first+1][currLocation.second-1] = '2'
-                                        }
-                                    } else if(toCheckRelative.second == 1) { // right
-                                        if(currLocation.first-1 >= 0 && newMap[currLocation.first-1][currLocation.second+1].isNotPipe()) { // rightTop
-                                            newMap[currLocation.first-1][currLocation.second+1] = '2'
-                                        } else if(currLocation.first+1 < input.size && newMap[currLocation.first+1][currLocation.second+1].isNotPipe()) { // rightBottom
-                                            newMap[currLocation.first+1][currLocation.second+1] = '3'
-                                        }
+                                    if(lastRelative.first == 1 || toCheckRelative.first == 1) {
+                                        newMap[newMapX+1][newMapY] = 'X'
                                     }
-                                     */
+                                    if(lastRelative.second == -1 || toCheckRelative.second == -1) {
+                                        newMap[newMapX][newMapY-1] = 'X'
+                                    }
+                                    if(lastRelative.second == 1 || toCheckRelative.second == 1) {
+                                        newMap[newMapX][newMapY+1] = 'X'
+                                    }
+
+                                    if(newLocations.size == 0) {
+                                        explored.add(checking)
+                                        newLocations.add(Pair(i, j))
+                                    }
                                 }
                             }
                         }
@@ -145,21 +131,28 @@ fun main() {
                 }
             }
             if(newLocations.size == 0) {
+                newMap = floodMap(newMap)
+                var insideCnt = 0
                 newMap.forEachIndexed { rowIndex, row ->
                     row.forEachIndexed { columnIndex, columns ->
-                        print(newMap[rowIndex][columnIndex])
+                        if(rowIndex%3==0 && columnIndex%3==0) {
+                            if(newMap[rowIndex][columnIndex] != 'X' && newMap[rowIndex][columnIndex] != 'O') {
+                                print('I')
+                                insideCnt++
+                            } else {
+                                print(newMap[rowIndex][columnIndex])
+                            }
+                        }
                     }
+                    if(rowIndex%3==0)
                     println()
                 }
+                println("InsideCnt: $insideCnt")
                 return (steps-1) / 2
             }
             lastLocation = currLocations[0]
             currLocations = newLocations
         }
-    }
-
-    fun part2(): Int {
-        return 1
     }
 
     measureTime {
